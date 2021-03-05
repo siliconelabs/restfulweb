@@ -11,11 +11,12 @@ public class Invoice {
     private LocalDate date;
     private BigDecimal total;
 
-    public Invoice(String name, String adres, LocalDate date, BigDecimal total) {
-        this.name = name;
-        this.adres = adres;
-        this.date = date;
-        this.total = total;
+    public Invoice() {
+    }
+
+    public Invoice(String name, String address, LocalDate date, BigDecimal total)
+    {
+        this(0, name, address, date, total);
     }
 
     public Invoice(int id, String name, String adres, LocalDate date, BigDecimal total) {
@@ -42,7 +43,7 @@ public class Invoice {
         this.name = name;
     }
 
-    public String getEmre() {
+    public String getAdres() {
         return adres;
     }
 

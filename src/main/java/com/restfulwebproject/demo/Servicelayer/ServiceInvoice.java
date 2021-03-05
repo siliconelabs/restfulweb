@@ -2,10 +2,12 @@ package com.restfulwebproject.demo.Servicelayer;
 
 import com.restfulwebproject.demo.repository.IInvoiceRepository;
 import com.restfulwebproject.demo.repository.Invoice;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 @Service
 public class ServiceInvoice {
@@ -43,4 +45,38 @@ public class ServiceInvoice {
     {
         return m_invoiceRepository.findInvoicesByDate(date);
     }
+
+
+    public boolean deleteInvoice(int id) {
+        Optional<Invoice> invoiceDb = m_invoiceRepository.findById(id);
+
+        if(invoiceDb.isPresent()) {
+            m_invoiceRepository.delete(invoiceDb.get());
+            return true;
+        }else {
+            return false;
+            //throw new RuntimeException("not found");
+        }
+
+    }
+
+    public Invoice  updateInvoice(Invoice invoice)
+    {
+
+        Optional<Invoice> invoiceDb = m_invoiceRepository.findById(invoice.getId());
+
+        if(invoiceDb.isPresent()) {
+            Invoice productUpdate = invoiceDb.get();
+            productUpdate.setId(invoice.getId());
+            productUpdate.setName(invoice.getName());
+
+            m_invoiceRepository.save(productUpdate);
+            return productUpdate;
+        }else {
+
+        }
+
+        return   m_invoiceRepository.save(invoice);
+    }
+
 }

@@ -1,9 +1,14 @@
 package com.restfulwebproject.demo.repository;
 
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
+import java.sql.ResultSet;
+import java.sql.SQLException;
 import java.time.LocalDate;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.Vector;
 import java.util.stream.Collectors;
@@ -11,16 +16,37 @@ import java.util.stream.Collectors;
 @Repository
 public class InvoiceRepository implements  IInvoiceRepository {
 
-   private static final Vector<Invoice> ms_invoices =new Vector();
+    private static final String FIND_ALL_SQL = "select * from invoices";
+    private static final String FIND_BY_MONTH_SQL = "select * from invoices where date_part('month', date) = ?";
+    private static final String COUNT_SQL = "select count(*) from invoices";
+    private static final String FIND_BY_ID_SQL = "select * from invoices where id = ?";
+    private static final String FIND_BY_DATE_SQL = "select * from invoices where date = ?";
+    private static final String SAVE_SQL = "insert into invoices (name, address, date, total) values (:name, :address, :date, :total)";
+
+
+
+    private static final Vector<Invoice> ms_invoices =new Vector();
    private static int m_currentId;
 
-   static{
-       ms_invoices.add(new Invoice(1,"siliconeLab","NJ",LocalDate.now(), BigDecimal.TEN));
-       ms_invoices.add(new Invoice(2,"elektrik","NJ",LocalDate.of(2021,12,23), BigDecimal.TEN));
-       ms_invoices.add(new Invoice(3,"gas","NJ",LocalDate.of(2020,3,21), BigDecimal.TEN));
-       ms_invoices.add(new Invoice(4,"su","NJ",LocalDate.now(), BigDecimal.TEN));
 
-   }
+    private final JdbcTemplate m_jdbcTemplate;
+
+    public InvoiceRepository(JdbcTemplate m_jdbcTemplate) {
+        this.m_jdbcTemplate = m_jdbcTemplate;
+    }
+
+    private void fillInvoices(ResultSet resultSet, List<Invoice> invoices) throws SQLException
+    {
+        do {
+            var invoiceId =  resultSet.getInt(1); //resultSet.getInt("invoice_id");
+            var name = resultSet.getString(2);
+            var address = resultSet.getString(3);
+            var date = resultSet.getDate(4).toLocalDate();
+            var total = resultSet.getDouble(5);
+
+            invoices.add(new Invoice(invoiceId, name, address, date, BigDecimal.valueOf(total)));
+        } while (resultSet.next());
+    }
 
 
     @Override
@@ -42,7 +68,7 @@ public class InvoiceRepository implements  IInvoiceRepository {
     @Override
     public void delete(Invoice entity) {
 
-       throw new UnsupportedOperationException();
+       ms_invoices.remove(0);
 
     }
 
@@ -68,8 +94,14 @@ public class InvoiceRepository implements  IInvoiceRepository {
     }
 
     @Override
-    public Iterable<Invoice> findAll() {
-        return ms_invoices;
+    public Iterable<Invoice> findAll()
+    {
+        var invoices = new ArrayList<Invoice>();
+
+
+        m_jdbcTemplate.query(FIND_ALL_SQL, ( ResultSet rs) -> fillInvoices(rs, invoices));
+
+        return invoices;
     }
 
     @Override
