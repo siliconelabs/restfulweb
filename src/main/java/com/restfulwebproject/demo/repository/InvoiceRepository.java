@@ -1,5 +1,6 @@
 package com.restfulwebproject.demo.repository;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Repository;
 
@@ -7,10 +8,7 @@ import java.math.BigDecimal;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
-import java.util.Vector;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Repository
@@ -30,8 +28,9 @@ public class InvoiceRepository implements  IInvoiceRepository {
 
 
     private final JdbcTemplate m_jdbcTemplate;
-
-    public InvoiceRepository(JdbcTemplate m_jdbcTemplate) {
+    @Autowired
+    public InvoiceRepository(JdbcTemplate m_jdbcTemplate)
+    {
         this.m_jdbcTemplate = m_jdbcTemplate;
     }
 
@@ -48,16 +47,31 @@ public class InvoiceRepository implements  IInvoiceRepository {
         } while (resultSet.next());
     }
 
-
-    @Override
-
-    public Iterable<Invoice> findInvoicesByMonth(int month) {
-        return ms_invoices.stream().filter(invoice -> invoice.getDate().getMonthValue()==month).collect(Collectors.toList());
+    Object[] getArguments(Object... args) {
+        return args;
     }
 
     @Override
-    public Iterable<Invoice> findInvoicesByDate(LocalDate date) {
-        return ms_invoices.stream().filter(invoice -> invoice.getDate().equals(date)).collect(Collectors.toList());
+    public Iterable<Invoice> findInvoicesByMonth(int month)
+    {
+        var invoices = new ArrayList<Invoice>();
+        Integer mon[]={Integer.valueOf(month)};
+
+        m_jdbcTemplate.query(FIND_BY_MONTH_SQL, getArguments(month), (ResultSet rs) -> fillInvoices(rs, invoices));
+
+        return invoices;
+    }
+
+    @Override
+    public Iterable<Invoice> findInvoicesByDate(LocalDate date)
+    {
+        var invoices = new ArrayList<Invoice>();
+
+      LocalDate dates[]={date};
+
+        m_jdbcTemplate.query(FIND_BY_DATE_SQL, dates, (ResultSet rs) -> fillInvoices(rs, invoices));
+
+        return invoices;
     }
 
     @Override
@@ -90,7 +104,8 @@ public class InvoiceRepository implements  IInvoiceRepository {
 
     @Override
     public boolean existById(Integer integer) {
-        return ms_invoices.stream().anyMatch(invoice -> invoice.getId()==integer);
+
+        return findById(integer).isPresent();
     }
 
     @Override
@@ -99,14 +114,18 @@ public class InvoiceRepository implements  IInvoiceRepository {
         var invoices = new ArrayList<Invoice>();
 
 
-        m_jdbcTemplate.query(FIND_ALL_SQL, ( ResultSet rs) -> fillInvoices(rs, invoices));
+        m_jdbcTemplate.query("select * from invoices", ( ResultSet rs) -> fillInvoices(rs, invoices));
 
         return invoices;
     }
 
     @Override
     public Optional<Invoice> findById(Integer id) {
-        return ms_invoices.stream().filter(invoice -> invoice.getId()==id).findFirst();
+        var invoices=new ArrayList<Invoice>();
+        Integer Ints[]={id};
+        m_jdbcTemplate.query(FIND_BY_ID_SQL,Ints,( ResultSet rs) -> fillInvoices(rs, invoices));
+
+        return invoices.stream().findFirst();
     }
 
     @Override

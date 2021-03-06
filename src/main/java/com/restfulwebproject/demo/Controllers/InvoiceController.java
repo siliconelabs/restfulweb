@@ -1,6 +1,7 @@
 package com.restfulwebproject.demo.Controllers;
 
 import com.restfulwebproject.demo.Servicelayer.ServiceInvoice;
+import com.restfulwebproject.demo.dto.InvoiceDTO;
 import com.restfulwebproject.demo.repository.Invoice;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -21,7 +22,7 @@ public class InvoiceController {
     }
 
     @GetMapping("/findAll")
-    public Iterable<Invoice> getAllInvoices()
+    public Iterable<InvoiceDTO> getAllInvoices()
     {
        return  service.findALlInvoices();
     }
@@ -49,9 +50,9 @@ public class InvoiceController {
     }
 
     @PostMapping("/save")
-    public Invoice saveInvoice(@RequestBody Invoice invoice)
+    public Invoice saveInvoice(@RequestBody InvoiceDTO invoiceDTO)
     {
-        return service.saveInvoce(invoice);
+        return service.saveInvoce(invoiceDTO);
     }
 
     @DeleteMapping("/delete/{id}")
